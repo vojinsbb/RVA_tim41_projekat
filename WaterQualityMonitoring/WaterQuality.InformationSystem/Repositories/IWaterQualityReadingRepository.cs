@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using WaterQuality.InformationSystem.Models;
 
@@ -19,5 +20,7 @@ namespace WaterQuality.InformationSystem.Repositories
         void Update(WaterQualityReading reading);
 
         void Delete(Guid id);
+
+        void ReplaceAll(IEnumerable<WaterQualityReading> readings);
     }
 }

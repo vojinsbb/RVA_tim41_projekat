@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using WaterQuality.InformationSystem.Models;
@@ -55,6 +56,16 @@ namespace WaterQuality.InformationSystem.Repositories
             }
 
             _sources.Remove(source);
+        }
+
+        public void ReplaceAll(IEnumerable<WaterSource> sources)
+        {
+            _sources.Clear();
+
+            foreach (WaterSource source in sources)
+            {
+                _sources.Add(source);
+            }
         }
     }
 }

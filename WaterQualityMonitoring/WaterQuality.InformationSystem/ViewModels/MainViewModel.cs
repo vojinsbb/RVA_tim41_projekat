@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiveChartsCore.Geo;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -8,6 +9,7 @@ using System.Windows;
 using System.Windows.Input;
 using WaterQuality.Contracts.Enums;
 using WaterQuality.InformationSystem.Commands;
+using WaterQuality.InformationSystem.Data;
 using WaterQuality.InformationSystem.Models;
 using WaterQuality.InformationSystem.Repositories;
 using WaterQuality.InformationSystem.Services;
@@ -19,6 +21,7 @@ namespace WaterQuality.InformationSystem.ViewModels
         private readonly IWaterSourceRepository _sourceRepository;
         private readonly IWaterQualityReadingRepository _readingRepository;
         private readonly ILoggingService _loggingService;
+        private readonly IDataPersistenceService _dataPersistenceService;
 
         private WaterSource _selectedWaterSource;
 
@@ -306,22 +309,23 @@ namespace WaterQuality.InformationSystem.ViewModels
 
         public ICommand ResetWaterQualityReadingsSearchCommand { get; set; }
 
+        public ICommand SaveDataCommand { get; set; }
+
+        public ICommand LoadDataCommand { get; set; }
+
         public MainViewModel()
         {
             _sourceRepository = new WaterSourceRepository();
             _readingRepository = new WaterQualityReadingRepository();
             _loggingService = new FileLoggingService();
+            _dataPersistenceService = new JsonDataPersistenceService();
 
-            SeedDataService seedDataService = new SeedDataService(
-                _sourceRepository,
-                _readingRepository);
-
-            seedDataService.LoadInitialData();
-
-            _loggingService.Log("Application started and initial data loaded.");
+            LoadInitialApplicationData();
 
             WaterSources = _sourceRepository.GetAll();
             WaterQualityReadings = _readingRepository.GetAll();
+
+            _loggingService.Log("Application started.");
 
             AddWaterSourceCommand = new RelayCommand(AddWaterSource);
             UpdateWaterSourceCommand = new RelayCommand(UpdateWaterSource);
@@ -338,6 +342,9 @@ namespace WaterQuality.InformationSystem.ViewModels
 
             SearchWaterQualityReadingsCommand = new RelayCommand(SearchWaterQualityReadings);
             ResetWaterQualityReadingsSearchCommand = new RelayCommand(ResetWaterQualityReadingsSearch);
+
+            SaveDataCommand = new RelayCommand(SaveData);
+            LoadDataCommand = new RelayCommand(LoadData);
 
             ClearWaterSourceForm(null);
             ClearWaterQualityReadingForm(null);
@@ -370,6 +377,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                     source.SourceType,
                     source.Municipality,
                     source.CapacityM3.ToString(CultureInfo.InvariantCulture)));
+            SaveCurrentData();
             WaterSources = _sourceRepository.GetAll();
             SourceSearchText = string.Empty;
 
@@ -414,6 +422,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                     updatedSource.SourceType,
                     updatedSource.Municipality,
                     updatedSource.CapacityM3.ToString(CultureInfo.InvariantCulture)));
+            SaveCurrentData();
             WaterSources = _sourceRepository.GetAll();
             SourceSearchText = string.Empty;
 
@@ -457,6 +466,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                     deletedSource.SourceType,
                     deletedSource.Municipality,
                     deletedSource.CapacityM3.ToString(CultureInfo.InvariantCulture)));
+            SaveCurrentData();
             WaterSources = _sourceRepository.GetAll();
             SourceSearchText = string.Empty;
 
@@ -492,6 +502,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                     reading.TurbidityNTU.ToString(CultureInfo.InvariantCulture),
                     reading.ChlorineLevel.ToString(CultureInfo.InvariantCulture),
                     reading.State));
+            SaveCurrentData();
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
 
@@ -538,6 +549,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                     updatedReading.TurbidityNTU.ToString(CultureInfo.InvariantCulture),
                     updatedReading.ChlorineLevel.ToString(CultureInfo.InvariantCulture),
                     updatedReading.State));
+            SaveCurrentData();
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
 
@@ -582,6 +594,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                     deletedReading.TurbidityNTU.ToString(CultureInfo.InvariantCulture),
                     deletedReading.ChlorineLevel.ToString(CultureInfo.InvariantCulture),
                     deletedReading.State));
+            SaveCurrentData();
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
 
@@ -779,6 +792,91 @@ namespace WaterQuality.InformationSystem.ViewModels
             }
 
             return true;
+        }
+
+        private void LoadInitialApplicationData()
+        {
+            if (_dataPersistenceService.DataFileExists())
+            {
+                WaterQualityDataStore loadedData = _dataPersistenceService.LoadData();
+
+                _sourceRepository.ReplaceAll(loadedData.WaterSources);
+                _readingRepository.ReplaceAll(loadedData.WaterQualityReadings);
+
+                _loggingService.Log("Data loaded from JSON file on application startup.");
+
+                return;
+            }
+
+            SeedDataService seedDataService = new SeedDataService(
+                _sourceRepository,
+                _readingRepository);
+
+            seedDataService.LoadInitialData();
+
+            SaveCurrentData();
+
+            _loggingService.Log("Seed data loaded and saved to JSON file.");
+        }
+
+        private void SaveCurrentData()
+        {
+            WaterQualityDataStore dataStore = new WaterQualityDataStore
+            {
+                WaterSources = _sourceRepository.GetAll().ToList(),
+                WaterQualityReadings = _readingRepository.GetAll().ToList()
+            };
+
+            _dataPersistenceService.SaveData(dataStore);
+        }
+
+        private void SaveData(object parameter)
+        {
+            SaveCurrentData();
+
+            _loggingService.Log("Data manually saved to JSON file.");
+
+            MessageBox.Show(
+                "Data saved successfully.",
+                "Save data",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        private void LoadData(object parameter)
+        {
+            if (!_dataPersistenceService.DataFileExists())
+            {
+                MessageBox.Show(
+                    "Data file does not exist.",
+                    "Load data",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                return;
+            }
+
+            WaterQualityDataStore loadedData = _dataPersistenceService.LoadData();
+
+            _sourceRepository.ReplaceAll(loadedData.WaterSources);
+            _readingRepository.ReplaceAll(loadedData.WaterQualityReadings);
+
+            WaterSources = _sourceRepository.GetAll();
+            WaterQualityReadings = _readingRepository.GetAll();
+
+            SourceSearchText = string.Empty;
+            ReadingSearchText = string.Empty;
+
+            ClearWaterSourceForm(null);
+            ClearWaterQualityReadingForm(null);
+
+            _loggingService.Log("Data manually loaded from JSON file.");
+
+            MessageBox.Show(
+                "Data loaded successfully.",
+                "Load data",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         private void CollectionViewSourceRefresh()

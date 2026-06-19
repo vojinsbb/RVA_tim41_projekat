@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using WaterQuality.InformationSystem.Models;
 
@@ -15,5 +16,7 @@ namespace WaterQuality.InformationSystem.Repositories
         void Update(WaterSource source);
 
         void Delete(Guid id);
+
+        void ReplaceAll(IEnumerable<WaterSource> sources);
     }
 }
