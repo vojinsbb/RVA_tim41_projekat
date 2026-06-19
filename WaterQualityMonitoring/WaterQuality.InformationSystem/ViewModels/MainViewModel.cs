@@ -36,9 +36,37 @@ namespace WaterQuality.InformationSystem.ViewModels
         private string _readingChlorineLevel;
         private WaterState _selectedReadingState;
 
-        public ObservableCollection<WaterSource> WaterSources { get; set; }
+        private string _sourceSearchText;
+        private string _readingSearchText;
 
-        public ObservableCollection<WaterQualityReading> WaterQualityReadings { get; set; }
+        private ObservableCollection<WaterSource> _waterSources;
+        private ObservableCollection<WaterQualityReading> _waterQualityReadings;
+
+        public ObservableCollection<WaterSource> WaterSources
+        {
+            get
+            {
+                return _waterSources;
+            }
+            set
+            {
+                _waterSources = value;
+                OnPropertyChanged(nameof(WaterSources));
+            }
+        }
+
+        public ObservableCollection<WaterQualityReading> WaterQualityReadings
+        {
+            get
+            {
+                return _waterQualityReadings;
+            }
+            set
+            {
+                _waterQualityReadings = value;
+                OnPropertyChanged(nameof(WaterQualityReadings));
+            }
+        }
 
         public WaterSource SelectedWaterSource
         {
@@ -227,6 +255,32 @@ namespace WaterQuality.InformationSystem.ViewModels
             }
         }
 
+        public string SourceSearchText
+        {
+            get
+            {
+                return _sourceSearchText;
+            }
+            set
+            {
+                _sourceSearchText = value;
+                OnPropertyChanged(nameof(SourceSearchText));
+            }
+        }
+
+        public string ReadingSearchText
+        {
+            get
+            {
+                return _readingSearchText;
+            }
+            set
+            {
+                _readingSearchText = value;
+                OnPropertyChanged(nameof(ReadingSearchText));
+            }
+        }
+
         public ICommand AddWaterSourceCommand { get; set; }
 
         public ICommand UpdateWaterSourceCommand { get; set; }
@@ -242,6 +296,14 @@ namespace WaterQuality.InformationSystem.ViewModels
         public ICommand DeleteWaterQualityReadingCommand { get; set; }
 
         public ICommand ClearWaterQualityReadingFormCommand { get; set; }
+
+        public ICommand SearchWaterSourcesCommand { get; set; }
+
+        public ICommand ResetWaterSourcesSearchCommand { get; set; }
+
+        public ICommand SearchWaterQualityReadingsCommand { get; set; }
+
+        public ICommand ResetWaterQualityReadingsSearchCommand { get; set; }
 
         public MainViewModel()
         {
@@ -267,6 +329,12 @@ namespace WaterQuality.InformationSystem.ViewModels
             DeleteWaterQualityReadingCommand = new RelayCommand(DeleteWaterQualityReading);
             ClearWaterQualityReadingFormCommand = new RelayCommand(ClearWaterQualityReadingForm);
 
+            SearchWaterSourcesCommand = new RelayCommand(SearchWaterSources);
+            ResetWaterSourcesSearchCommand = new RelayCommand(ResetWaterSourcesSearch);
+
+            SearchWaterQualityReadingsCommand = new RelayCommand(SearchWaterQualityReadings);
+            ResetWaterQualityReadingsSearchCommand = new RelayCommand(ResetWaterQualityReadingsSearch);
+
             ClearWaterSourceForm(null);
             ClearWaterQualityReadingForm(null);
         }
@@ -289,6 +357,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             };
 
             _sourceRepository.Add(source);
+            WaterSources = _sourceRepository.GetAll();
+            SourceSearchText = string.Empty;
 
             ClearWaterSourceForm(null);
         }
@@ -322,6 +392,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             };
 
             _sourceRepository.Update(updatedSource);
+            WaterSources = _sourceRepository.GetAll();
+            SourceSearchText = string.Empty;
 
             CollectionViewSourceRefresh();
 
@@ -353,6 +425,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             }
 
             _sourceRepository.Delete(SelectedWaterSource.Id);
+            WaterSources = _sourceRepository.GetAll();
+            SourceSearchText = string.Empty;
 
             ClearWaterSourceForm(null);
         }
@@ -376,6 +450,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             };
 
             _readingRepository.Add(reading);
+            WaterQualityReadings = _readingRepository.GetAll();
+            ReadingSearchText = string.Empty;
 
             ClearWaterQualityReadingForm(null);
         }
@@ -410,6 +486,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             };
 
             _readingRepository.Update(updatedReading);
+            WaterQualityReadings = _readingRepository.GetAll();
+            ReadingSearchText = string.Empty;
 
             System.Windows.Data.CollectionViewSource.GetDefaultView(WaterQualityReadings).Refresh();
 
@@ -441,6 +519,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             }
 
             _readingRepository.Delete(SelectedWaterQualityReading.Id);
+            WaterQualityReadings = _readingRepository.GetAll();
+            ReadingSearchText = string.Empty;
 
             ClearWaterQualityReadingForm(null);
         }
@@ -454,6 +534,34 @@ namespace WaterQuality.InformationSystem.ViewModels
             SourceCapacityM3 = string.Empty;
         }
 
+        private void SearchWaterSources(object parameter)
+        {
+            if (string.IsNullOrWhiteSpace(SourceSearchText))
+            {
+                WaterSources = _sourceRepository.GetAll();
+                return;
+            }
+
+            string searchText = SourceSearchText.Trim().ToLower();
+
+            WaterSources = new ObservableCollection<WaterSource>(
+                _sourceRepository.GetAll().Where(source =>
+                    source.Id.ToString().ToLower().Contains(searchText) ||
+                    source.Name.ToLower().Contains(searchText) ||
+                    source.Location.ToLower().Contains(searchText) ||
+                    source.SourceType.ToLower().Contains(searchText) ||
+                    source.Municipality.ToLower().Contains(searchText) ||
+                    source.CapacityM3.ToString(CultureInfo.InvariantCulture).ToLower().Contains(searchText)
+                )
+            );
+        }
+
+        private void ResetWaterSourcesSearch(object parameter)
+        {
+            SourceSearchText = string.Empty;
+            WaterSources = _sourceRepository.GetAll();
+        }
+
         private void ClearWaterQualityReadingForm(object parameter)
         {
             SelectedWaterQualityReading = null;
@@ -463,6 +571,36 @@ namespace WaterQuality.InformationSystem.ViewModels
             ReadingTurbidityNTU = string.Empty;
             ReadingChlorineLevel = string.Empty;
             SelectedReadingState = WaterState.Safe;
+        }
+
+        private void SearchWaterQualityReadings(object parameter)
+        {
+            if (string.IsNullOrWhiteSpace(ReadingSearchText))
+            {
+                WaterQualityReadings = _readingRepository.GetAll();
+                return;
+            }
+
+            string searchText = ReadingSearchText.Trim().ToLower();
+
+            WaterQualityReadings = new ObservableCollection<WaterQualityReading>(
+                _readingRepository.GetAll().Where(reading =>
+                    reading.Id.ToString().ToLower().Contains(searchText) ||
+                    reading.SourceId.ToString().ToLower().Contains(searchText) ||
+                    reading.SampledAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture).ToLower().Contains(searchText) ||
+                    reading.SampledAt.Year.ToString().Contains(searchText) ||
+                    reading.PHLevel.ToString(CultureInfo.InvariantCulture).ToLower().Contains(searchText) ||
+                    reading.TurbidityNTU.ToString(CultureInfo.InvariantCulture).ToLower().Contains(searchText) ||
+                    reading.ChlorineLevel.ToString(CultureInfo.InvariantCulture).ToLower().Contains(searchText) ||
+                    reading.State.ToString().ToLower().Contains(searchText)
+                )
+            );
+        }
+
+        private void ResetWaterQualityReadingsSearch(object parameter)
+        {
+            ReadingSearchText = string.Empty;
+            WaterQualityReadings = _readingRepository.GetAll();
         }
 
         private void FillReadingForm(WaterQualityReading reading)

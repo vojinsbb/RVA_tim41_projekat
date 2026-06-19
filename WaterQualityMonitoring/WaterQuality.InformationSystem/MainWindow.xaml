@@ -130,11 +130,40 @@
                 </Grid>
             </Border>
 
-            <TextBlock Grid.Row="2"
-                       Text="Water Sources"
-                       FontSize="20"
-                       FontWeight="Bold"
-                       Margin="0,0,0,10"/>
+            <Grid Grid.Row="2" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                    Text="Water Sources"
+                    FontSize="20"
+                    FontWeight="Bold"
+                    VerticalAlignment="Center"
+                    Margin="0,0,20,0"/>
+                
+                <TextBox Grid.Column="1"
+                     Text="{Binding SourceSearchText, UpdateSourceTrigger=PropertyChanged}"
+                    Height="28"
+                    Margin="0,0,10,0"/>
+
+                <Button Grid.Column="2"
+                    Content="Search"
+                    Width="90"
+                    Height="28"
+                    Margin="0,0,10,0"
+                    Command="{Binding SearchWaterSourcesCommand}"/>
+
+                <Button Grid.Column="3"
+                    Content="Reset"
+                    Width="90"
+                    Height="28"
+                    Command="{Binding ResetWaterSourcesSearchCommand}"/>
+            </Grid>
 
             <DataGrid Grid.Row="3"
                       ItemsSource="{Binding WaterSources}"
@@ -295,11 +324,40 @@
                 </Grid>
             </Border>
 
-            <TextBlock Grid.Row="6"
-                       Text="Water Quality Readings"
-                       FontSize="20"
-                       FontWeight="Bold"
-                       Margin="0,0,0,10"/>
+            <Grid Grid.Row="6" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                    Text="Water Quality Readings"
+                    FontSize="20"
+                    FontWeight="Bold"
+                    VerticalAlignment="Center"
+                    Margin="0,0,20,0"/>
+
+                <TextBox Grid.Column="1"
+                    Text="{Binding ReadingSearchText, UpdateSourceTrigger=PropertyChanged}"
+                    Height="28"
+                    Margin="0,0,10,0"/>
+
+                <Button Grid.Column="2"
+                    Content="Search"
+                    Width="90"
+                    Height="28"
+                    Margin="0,0,10,0"
+                    Command="{Binding SearchWaterQualityReadingsCommand}"/>
+
+                <Button Grid.Column="3"
+                    Content="Reset"
+                    Width="90"
+                    Height="28"
+                    Command="{Binding ResetWaterQualityReadingsSearchCommand}"/>
+            </Grid>
 
             <DataGrid Grid.Row="7"
                       ItemsSource="{Binding WaterQualityReadings}"
