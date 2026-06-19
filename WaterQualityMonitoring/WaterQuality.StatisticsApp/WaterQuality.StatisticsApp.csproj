@@ -87,10 +87,17 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Commands\.gitkeep" />
+    <None Include="Data\.gitkeep" />
+    <None Include="Helpers\.gitkeep" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Services\.gitkeep" />
+    <None Include="Strategies\.gitkeep" />
+    <None Include="ViewModels\.gitkeep" />
+    <None Include="Views\.gitkeep" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -101,14 +108,6 @@
       <Name>WaterQuality.Contracts</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Commands\" />
-    <Folder Include="Data\" />
-    <Folder Include="Helpers\" />
-    <Folder Include="Services\" />
-    <Folder Include="Strategies\" />
-    <Folder Include="ViewModels\" />
-    <Folder Include="Views\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
