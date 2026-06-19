@@ -1,6 +1,7 @@
 ﻿<Window x:Class="WaterQuality.InformationSystem.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
         Title="Water Quality Information System"
         Height="850"
         Width="1300"
@@ -17,6 +18,8 @@
                 <RowDefinition Height="220"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="220"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="300"/>
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Margin="0,0,0,10">
@@ -357,6 +360,12 @@
                                 Width="100"
                                 Height="30"
                                 Command="{Binding ClearWaterQualityReadingFormCommand}"/>
+
+                        <Button Content="Simulate States"
+                                Width="130"
+                                Height="30"
+                                Margin="10,0,0,0"
+                                Command="{Binding SimulateReadingStatesCommand}"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -433,6 +442,147 @@
                                         Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
+
+            <TextBlock Grid.Row="8"
+                       Text="Water Quality State Chart"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Margin="0,20,0,10"/>
+
+            <Border Grid.Row="9"
+                    BorderBrush="Gray"
+                    BorderThickness="1"
+                    Padding="15"
+                    Margin="0,0,0,20">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="45"/>
+                        <RowDefinition Height="45"/>
+                        <RowDefinition Height="45"/>
+                        <RowDefinition Height="45"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="{Binding StateChartSummary}"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Margin="0,0,0,15"/>
+
+                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="50"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Safe"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+
+                        <ProgressBar Grid.Column="1"
+                                     Minimum="0"
+                                     Maximum="{Binding MaxStateCount}"
+                                     Value="{Binding SafeCount}"
+                                     Height="25"
+                                     VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding SafeCount}"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="2" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="50"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Acceptable"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+
+                        <ProgressBar Grid.Column="1"
+                                     Minimum="0"
+                                     Maximum="{Binding MaxStateCount}"
+                                     Value="{Binding AcceptableCount}"
+                                     Height="25"
+                                     VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding AcceptableCount}"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="3" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="50"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Unsafe"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+
+                        <ProgressBar Grid.Column="1"
+                                     Minimum="0"
+                                     Maximum="{Binding MaxStateCount}"
+                                     Value="{Binding UnsafeCount}"
+                                     Height="25"
+                                     VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding UnsafeCount}"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="50"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Contaminated"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+
+                        <ProgressBar Grid.Column="1"
+                                    Minimum="0"
+                                     Maximum="{Binding MaxStateCount}"
+                                     Value="{Binding ContaminatedCount}"
+                                     Height="25"
+                                     VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding ContaminatedCount}"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
         </Grid>
     </ScrollViewer>
 </Window>

@@ -1,4 +1,6 @@
-﻿using LiveChartsCore.Geo;
+﻿using LiveChartsCore;
+using LiveChartsCore.Defaults;
+using LiveChartsCore.SkiaSharpView;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,6 +10,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using WaterQuality.Contracts.Enums;
 using WaterQuality.InformationSystem.Commands;
 using WaterQuality.InformationSystem.Data;
@@ -49,6 +52,28 @@ namespace WaterQuality.InformationSystem.ViewModels
 
         private ObservableCollection<WaterSource> _waterSources;
         private ObservableCollection<WaterQualityReading> _waterQualityReadings;
+
+        private DispatcherTimer _stateSimulationTimer;
+        private Guid _simulatedReadingId;
+        private bool _isStateSimulationRunning;
+        private int _simulationStateIndex;
+
+        private ISeries[] _stateChartSeries;
+        private Axis[] _stateChartXAxes;
+        private Axis[] _stateChartYAxes;
+
+        private ObservableValue _safeChartValue;
+        private ObservableValue _acceptableChartValue;
+        private ObservableValue _unsafeChartValue;
+        private ObservableValue _contaminatedChartValue;
+
+        private int _safeCount;
+        private int _acceptableCount;
+        private int _unsafeCount;
+        private int _contaminatedCount;
+        private int _maxStateCount;
+
+        private string _stateChartSummary;
 
         public ObservableCollection<WaterSource> WaterSources
         {
@@ -289,6 +314,123 @@ namespace WaterQuality.InformationSystem.ViewModels
             }
         }
 
+        public ISeries[] StateChartSeries
+        {
+            get
+            {
+                return _stateChartSeries;
+            }
+            set
+            {
+                _stateChartSeries = value;
+                OnPropertyChanged(nameof(StateChartSeries));
+            }
+        }
+
+        public Axis[] StateChartXAxes
+        {
+            get
+            {
+                return _stateChartXAxes;
+            }
+            set
+            {
+                _stateChartXAxes = value;
+                OnPropertyChanged(nameof(StateChartXAxes));
+            }
+        }
+
+        public Axis[] StateChartYAxes
+        {
+            get
+            {
+                return _stateChartYAxes;
+            }
+            set
+            {
+                _stateChartYAxes = value;
+                OnPropertyChanged(nameof(StateChartYAxes));
+            }
+        }
+
+        public string StateChartSummary
+        {
+            get
+            {
+                return _stateChartSummary;
+            }
+            set
+            {
+                _stateChartSummary = value;
+                OnPropertyChanged(nameof(StateChartSummary));
+            }
+        }
+
+        public int SafeCount
+        {
+            get
+            {
+                return _safeCount;
+            }
+            set
+            {
+                _safeCount = value;
+                OnPropertyChanged(nameof(SafeCount));
+            }
+        }
+
+        public int AcceptableCount
+        {
+            get
+            {
+                return _acceptableCount;
+            }
+            set
+            {
+                _acceptableCount = value;
+                OnPropertyChanged(nameof(AcceptableCount));
+            }
+        }
+
+        public int UnsafeCount
+        {
+            get
+            {
+                return _unsafeCount;
+            }
+            set
+            {
+                _unsafeCount = value;
+                OnPropertyChanged(nameof(UnsafeCount));
+            }
+        }
+
+        public int ContaminatedCount
+        {
+            get
+            {
+                return _contaminatedCount;
+            }
+            set
+            {
+                _contaminatedCount = value;
+                OnPropertyChanged(nameof(ContaminatedCount));
+            }
+        }
+
+        public int MaxStateCount
+        {
+            get
+            {
+                return _maxStateCount;
+            }
+            set
+            {
+                _maxStateCount = value;
+                OnPropertyChanged(nameof(MaxStateCount));
+            }
+        }
+
         public ICommand AddWaterSourceCommand { get; set; }
 
         public ICommand UpdateWaterSourceCommand { get; set; }
@@ -321,6 +463,8 @@ namespace WaterQuality.InformationSystem.ViewModels
 
         public ICommand RedoCommand { get; set; }
 
+        public ICommand SimulateReadingStatesCommand { get; set; }
+
         public MainViewModel()
         {
             _sourceRepository = new WaterSourceRepository();
@@ -328,11 +472,17 @@ namespace WaterQuality.InformationSystem.ViewModels
             _loggingService = new FileLoggingService();
             _dataPersistenceService = new JsonDataPersistenceService();
             _undoRedoService = new UndoRedoService();
+            _stateSimulationTimer = new DispatcherTimer();
+            _stateSimulationTimer.Interval = TimeSpan.FromSeconds(1);
+            _stateSimulationTimer.Tick += StateSimulationTimer_Tick;
 
             LoadInitialApplicationData();
 
             WaterSources = _sourceRepository.GetAll();
             WaterQualityReadings = _readingRepository.GetAll();
+
+            InitializeStateChart();
+            RefreshStateChart();
 
             _loggingService.Log("Application started.");
 
@@ -357,6 +507,8 @@ namespace WaterQuality.InformationSystem.ViewModels
 
             UndoCommand = new RelayCommand(Undo);
             RedoCommand = new RelayCommand(Redo);
+
+            SimulateReadingStatesCommand = new RelayCommand(SimulateReadingStates);
 
             ClearWaterSourceForm(null);
             ClearWaterQualityReadingForm(null);
@@ -520,6 +672,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
 
+            RefreshStateChart();
+
             ClearWaterQualityReadingForm(null);
         }
 
@@ -569,6 +723,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
 
+            RefreshStateChart();
+
             RefreshTables();
 
             System.Windows.Data.CollectionViewSource.GetDefaultView(WaterQualityReadings).Refresh();
@@ -615,6 +771,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             SaveCurrentData();
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
+
+            RefreshStateChart();
 
             ClearWaterQualityReadingForm(null);
         }
@@ -695,6 +853,9 @@ namespace WaterQuality.InformationSystem.ViewModels
         {
             ReadingSearchText = string.Empty;
             WaterQualityReadings = _readingRepository.GetAll();
+
+            RefreshTables();
+            RefreshStateChart();
         }
 
         private void FillReadingForm(WaterQualityReading reading)
@@ -884,6 +1045,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             WaterSources = _sourceRepository.GetAll();
             WaterQualityReadings = _readingRepository.GetAll();
 
+            RefreshStateChart();
+
             SourceSearchText = string.Empty;
             ReadingSearchText = string.Empty;
 
@@ -921,6 +1084,7 @@ namespace WaterQuality.InformationSystem.ViewModels
             ReadingSearchText = string.Empty;
 
             RefreshTables();
+            RefreshStateChart();
 
             ClearWaterSourceForm(null);
             ClearWaterQualityReadingForm(null);
@@ -952,6 +1116,7 @@ namespace WaterQuality.InformationSystem.ViewModels
             ReadingSearchText = string.Empty;
 
             RefreshTables();
+            RefreshStateChart();
 
             ClearWaterSourceForm(null);
             ClearWaterQualityReadingForm(null);
@@ -959,6 +1124,174 @@ namespace WaterQuality.InformationSystem.ViewModels
             SaveCurrentData();
 
             _loggingService.Log("Redo executed: " + command.Description + ".");
+        }
+
+        private void SimulateReadingStates(object parameter)
+        {
+            if (SelectedWaterQualityReading == null)
+            {
+                MessageBox.Show(
+                    "Please select a water quality reading before starting state simulation.",
+                    "State simulation",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                return;
+            }
+
+            _simulatedReadingId = SelectedWaterQualityReading.Id;
+            _isStateSimulationRunning = true;
+            _simulationStateIndex = 0;
+
+            _stateSimulationTimer.Stop();
+            _stateSimulationTimer.Start();
+
+            _loggingService.Log(
+                string.Format(
+                    "State simulation started for water quality reading: Id={0}.",
+                    _simulatedReadingId));
+        }
+
+        private void StateSimulationTimer_Tick(object sender, EventArgs e)
+        {
+            if (!_isStateSimulationRunning)
+            {
+                _stateSimulationTimer.Stop();
+                return;
+            }
+
+            WaterQualityReading currentReading = _readingRepository.GetById(_simulatedReadingId);
+
+            if (currentReading == null)
+            {
+                _stateSimulationTimer.Stop();
+                _isStateSimulationRunning = false;
+                _simulatedReadingId = Guid.Empty;
+                _simulationStateIndex = 0;
+                return;
+            }
+
+            WaterState[] states =
+            {
+                WaterState.Safe,
+                WaterState.Acceptable,
+                WaterState.Unsafe,
+                WaterState.Contaminated
+            };
+
+            WaterQualityReading updatedReading = CloneHelper.CloneWaterQualityReading(currentReading);
+            updatedReading.State = states[_simulationStateIndex];
+
+            _readingRepository.Update(updatedReading);
+
+            WaterQualityReadings = _readingRepository.GetAll();
+            SelectedWaterQualityReading = _readingRepository.GetById(_simulatedReadingId);
+
+            RefreshTables();
+            RefreshStateChart();
+            SaveCurrentData();
+
+            _loggingService.Log(
+                string.Format(
+                    "State simulation changed reading state: Id={0}, NewState={1}.",
+                    updatedReading.Id,
+                    updatedReading.State));
+
+            _simulationStateIndex++;
+
+            if (_simulationStateIndex >= states.Length)
+            {
+                _stateSimulationTimer.Stop();
+
+                _loggingService.Log(
+                    string.Format(
+                        "State simulation finished for water quality reading: Id={0}.",
+                        _simulatedReadingId));
+
+                _isStateSimulationRunning = false;
+                _simulatedReadingId = Guid.Empty;
+                _simulationStateIndex = 0;
+            }
+        }
+
+        private void InitializeStateChart()
+        {
+            _safeChartValue = new ObservableValue(0);
+            _acceptableChartValue = new ObservableValue(0);
+            _unsafeChartValue = new ObservableValue(0);
+            _contaminatedChartValue = new ObservableValue(0);
+
+            StateChartSeries = new ISeries[]
+            {
+                new ColumnSeries<ObservableValue>
+                {
+                    Name = "Safe",
+                    Values = new[] { _safeChartValue }
+                },
+                new ColumnSeries<ObservableValue>
+                {
+                    Name = "Acceptable",
+                    Values = new[] { _acceptableChartValue }
+                },
+                new ColumnSeries<ObservableValue>
+                {
+                    Name = "Unsafe",
+                    Values = new[] { _unsafeChartValue }
+                },
+                new ColumnSeries<ObservableValue>
+                {
+                    Name = "Contaminated",
+                    Values = new[] { _contaminatedChartValue }
+                }
+            };
+
+            StateChartXAxes = new Axis[]
+            {
+                new Axis
+                {
+                    Labels = new[] { "Water states" }
+                }
+            };
+
+            StateChartYAxes = new Axis[]
+            {
+                new Axis
+                {
+                    MinLimit = 0,
+                    MinStep = 1
+                }
+            };
+        }
+
+        private void RefreshStateChart()
+        {
+            int safeCount = _readingRepository.GetAll().Count(reading => reading.State == WaterState.Safe);
+            int acceptableCount = _readingRepository.GetAll().Count(reading => reading.State == WaterState.Acceptable);
+            int unsafeCount = _readingRepository.GetAll().Count(reading => reading.State == WaterState.Unsafe);
+            int contaminatedCount = _readingRepository.GetAll().Count(reading => reading.State == WaterState.Contaminated);
+
+            SafeCount = safeCount;
+            AcceptableCount = acceptableCount;
+            UnsafeCount = unsafeCount;
+            ContaminatedCount = contaminatedCount;
+
+            int maxCount = Math.Max(
+                Math.Max(safeCount, acceptableCount),
+                Math.Max(unsafeCount, contaminatedCount));
+
+            if (maxCount <= 0)
+            {
+                maxCount = 1;
+            }
+
+            MaxStateCount = maxCount;
+
+            StateChartSummary = string.Format(
+                "Safe: {0} | Acceptable: {1} | Unsafe: {2} | Contaminated: {3}",
+                safeCount,
+                acceptableCount,
+                unsafeCount,
+                contaminatedCount);
         }
 
         private bool TryParseDoubleInput(string input, out double value)
