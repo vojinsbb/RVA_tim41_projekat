@@ -120,6 +120,8 @@
     <Compile Include="Repositories\IWaterSourceRepository.cs" />
     <Compile Include="Repositories\WaterQualityReadingRepository.cs" />
     <Compile Include="Repositories\WaterSourceRepository.cs" />
+    <Compile Include="Services\FileLoggingService.cs" />
+    <Compile Include="Services\ILoggingService.cs" />
     <Compile Include="Services\SeedDataService.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Page Include="MainWindow.xaml">

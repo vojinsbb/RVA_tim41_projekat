@@ -18,6 +18,7 @@ namespace WaterQuality.InformationSystem.ViewModels
     {
         private readonly IWaterSourceRepository _sourceRepository;
         private readonly IWaterQualityReadingRepository _readingRepository;
+        private readonly ILoggingService _loggingService;
 
         private WaterSource _selectedWaterSource;
 
@@ -309,12 +310,15 @@ namespace WaterQuality.InformationSystem.ViewModels
         {
             _sourceRepository = new WaterSourceRepository();
             _readingRepository = new WaterQualityReadingRepository();
+            _loggingService = new FileLoggingService();
 
             SeedDataService seedDataService = new SeedDataService(
                 _sourceRepository,
                 _readingRepository);
 
             seedDataService.LoadInitialData();
+
+            _loggingService.Log("Application started and initial data loaded.");
 
             WaterSources = _sourceRepository.GetAll();
             WaterQualityReadings = _readingRepository.GetAll();
@@ -357,6 +361,15 @@ namespace WaterQuality.InformationSystem.ViewModels
             };
 
             _sourceRepository.Add(source);
+            _loggingService.Log(
+                string.Format(
+                    "Added water source: Id={0}, Name={1}, Location={2}, SourceType={3}, Municipality={4}, CapacityM3={5}.",
+                    source.Id,
+                    source.Name,
+                    source.Location,
+                    source.SourceType,
+                    source.Municipality,
+                    source.CapacityM3.ToString(CultureInfo.InvariantCulture)));
             WaterSources = _sourceRepository.GetAll();
             SourceSearchText = string.Empty;
 
@@ -392,6 +405,15 @@ namespace WaterQuality.InformationSystem.ViewModels
             };
 
             _sourceRepository.Update(updatedSource);
+            _loggingService.Log(
+                string.Format(
+                    "Updated water source: Id={0}, Name={1}, Location={2}, SourceType={3}, Municipality={4}, CapacityM3={5}.",
+                    updatedSource.Id,
+                    updatedSource.Name,
+                    updatedSource.Location,
+                    updatedSource.SourceType,
+                    updatedSource.Municipality,
+                    updatedSource.CapacityM3.ToString(CultureInfo.InvariantCulture)));
             WaterSources = _sourceRepository.GetAll();
             SourceSearchText = string.Empty;
 
@@ -424,7 +446,17 @@ namespace WaterQuality.InformationSystem.ViewModels
                 return;
             }
 
+            WaterSource deletedSource = SelectedWaterSource;
             _sourceRepository.Delete(SelectedWaterSource.Id);
+            _loggingService.Log(
+                string.Format(
+                    "Deleted water source: Id={0}, Name={1}, Location={2}, SourceType={3}, Municipality={4}, CapacityM3={5}.",
+                    deletedSource.Id,
+                    deletedSource.Name,
+                    deletedSource.Location,
+                    deletedSource.SourceType,
+                    deletedSource.Municipality,
+                    deletedSource.CapacityM3.ToString(CultureInfo.InvariantCulture)));
             WaterSources = _sourceRepository.GetAll();
             SourceSearchText = string.Empty;
 
@@ -450,6 +482,16 @@ namespace WaterQuality.InformationSystem.ViewModels
             };
 
             _readingRepository.Add(reading);
+            _loggingService.Log(
+                string.Format(
+                    "Added water quality reading: Id={0}, SourceId={1}, SampledAt={2:yyyy-MM-dd}, PHLevel={3}, TurbidityNTU={4}, ChlorineLevel={5}, State={6}.",
+                    reading.Id,
+                    reading.SourceId,
+                    reading.SampledAt,
+                    reading.PHLevel.ToString(CultureInfo.InvariantCulture),
+                    reading.TurbidityNTU.ToString(CultureInfo.InvariantCulture),
+                    reading.ChlorineLevel.ToString(CultureInfo.InvariantCulture),
+                    reading.State));
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
 
@@ -486,6 +528,16 @@ namespace WaterQuality.InformationSystem.ViewModels
             };
 
             _readingRepository.Update(updatedReading);
+            _loggingService.Log(
+                string.Format(
+                    "Updated water quality reading: Id={0}, SourceId={1}, SampledAt={2:yyyy-MM-dd}, PHLevel={3}, TurbidityNTU={4}, ChlorineLevel={5}, State={6}.",
+                    updatedReading.Id,
+                    updatedReading.SourceId,
+                    updatedReading.SampledAt,
+                    updatedReading.PHLevel.ToString(CultureInfo.InvariantCulture),
+                    updatedReading.TurbidityNTU.ToString(CultureInfo.InvariantCulture),
+                    updatedReading.ChlorineLevel.ToString(CultureInfo.InvariantCulture),
+                    updatedReading.State));
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
 
@@ -518,7 +570,18 @@ namespace WaterQuality.InformationSystem.ViewModels
                 return;
             }
 
+            WaterQualityReading deletedReading = SelectedWaterQualityReading;
             _readingRepository.Delete(SelectedWaterQualityReading.Id);
+            _loggingService.Log(
+                string.Format(
+                    "Deleted water quality reading: Id={0}, SourceId={1}, SampledAt={2:yyyy-MM-dd}, PHLevel={3}, TurbidityNTU={4}, ChlorineLevel={5}, State={6}.",
+                    deletedReading.Id,
+                    deletedReading.SourceId,
+                    deletedReading.SampledAt,
+                    deletedReading.PHLevel.ToString(CultureInfo.InvariantCulture),
+                    deletedReading.TurbidityNTU.ToString(CultureInfo.InvariantCulture),
+                    deletedReading.ChlorineLevel.ToString(CultureInfo.InvariantCulture),
+                    deletedReading.State));
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
 
