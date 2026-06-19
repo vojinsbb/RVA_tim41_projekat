@@ -6,10 +6,12 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 using WaterQuality.Contracts.Enums;
 using WaterQuality.InformationSystem.Commands;
 using WaterQuality.InformationSystem.Data;
+using WaterQuality.InformationSystem.Helpers;
 using WaterQuality.InformationSystem.Models;
 using WaterQuality.InformationSystem.Repositories;
 using WaterQuality.InformationSystem.Services;
@@ -22,6 +24,8 @@ namespace WaterQuality.InformationSystem.ViewModels
         private readonly IWaterQualityReadingRepository _readingRepository;
         private readonly ILoggingService _loggingService;
         private readonly IDataPersistenceService _dataPersistenceService;
+
+        private readonly UndoRedoService _undoRedoService;
 
         private WaterSource _selectedWaterSource;
 
@@ -313,12 +317,17 @@ namespace WaterQuality.InformationSystem.ViewModels
 
         public ICommand LoadDataCommand { get; set; }
 
+        public ICommand UndoCommand { get; set; }
+
+        public ICommand RedoCommand { get; set; }
+
         public MainViewModel()
         {
             _sourceRepository = new WaterSourceRepository();
             _readingRepository = new WaterQualityReadingRepository();
             _loggingService = new FileLoggingService();
             _dataPersistenceService = new JsonDataPersistenceService();
+            _undoRedoService = new UndoRedoService();
 
             LoadInitialApplicationData();
 
@@ -346,6 +355,9 @@ namespace WaterQuality.InformationSystem.ViewModels
             SaveDataCommand = new RelayCommand(SaveData);
             LoadDataCommand = new RelayCommand(LoadData);
 
+            UndoCommand = new RelayCommand(Undo);
+            RedoCommand = new RelayCommand(Redo);
+
             ClearWaterSourceForm(null);
             ClearWaterQualityReadingForm(null);
         }
@@ -367,7 +379,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                 CapacityM3 = ParseDoubleInput(SourceCapacityM3)
             };
 
-            _sourceRepository.Add(source);
+            _undoRedoService.ExecuteCommand(new AddWaterSourceCommand(_sourceRepository, source));
             _loggingService.Log(
                 string.Format(
                     "Added water source: Id={0}, Name={1}, Location={2}, SourceType={3}, Municipality={4}, CapacityM3={5}.",
@@ -402,6 +414,8 @@ namespace WaterQuality.InformationSystem.ViewModels
                 return;
             }
 
+            WaterSource oldSource = CloneHelper.CloneWaterSource(SelectedWaterSource);
+
             WaterSource updatedSource = new WaterSource
             {
                 Id = SelectedWaterSource.Id,
@@ -412,7 +426,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                 CapacityM3 = ParseDoubleInput(SourceCapacityM3)
             };
 
-            _sourceRepository.Update(updatedSource);
+            _undoRedoService.ExecuteCommand(new UpdateWaterSourceCommand(_sourceRepository, oldSource, updatedSource));
             _loggingService.Log(
                 string.Format(
                     "Updated water source: Id={0}, Name={1}, Location={2}, SourceType={3}, Municipality={4}, CapacityM3={5}.",
@@ -426,7 +440,7 @@ namespace WaterQuality.InformationSystem.ViewModels
             WaterSources = _sourceRepository.GetAll();
             SourceSearchText = string.Empty;
 
-            CollectionViewSourceRefresh();
+            RefreshTables();
 
             ClearWaterSourceForm(null);
         }
@@ -455,8 +469,8 @@ namespace WaterQuality.InformationSystem.ViewModels
                 return;
             }
 
-            WaterSource deletedSource = SelectedWaterSource;
-            _sourceRepository.Delete(SelectedWaterSource.Id);
+            WaterSource deletedSource = CloneHelper.CloneWaterSource(SelectedWaterSource);
+            _undoRedoService.ExecuteCommand(new DeleteWaterSourceCommand(_sourceRepository, deletedSource));
             _loggingService.Log(
                 string.Format(
                     "Deleted water source: Id={0}, Name={1}, Location={2}, SourceType={3}, Municipality={4}, CapacityM3={5}.",
@@ -491,7 +505,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                 State = SelectedReadingState
             };
 
-            _readingRepository.Add(reading);
+            _undoRedoService.ExecuteCommand(new AddWaterQualityReadingCommand(_readingRepository, reading));
             _loggingService.Log(
                 string.Format(
                     "Added water quality reading: Id={0}, SourceId={1}, SampledAt={2:yyyy-MM-dd}, PHLevel={3}, TurbidityNTU={4}, ChlorineLevel={5}, State={6}.",
@@ -527,6 +541,8 @@ namespace WaterQuality.InformationSystem.ViewModels
                 return;
             }
 
+            WaterQualityReading oldReading = CloneHelper.CloneWaterQualityReading(SelectedWaterQualityReading);
+
             WaterQualityReading updatedReading = new WaterQualityReading
             {
                 Id = SelectedWaterQualityReading.Id,
@@ -538,7 +554,7 @@ namespace WaterQuality.InformationSystem.ViewModels
                 State = SelectedReadingState
             };
 
-            _readingRepository.Update(updatedReading);
+            _undoRedoService.ExecuteCommand(new UpdateWaterQualityReadingCommand(_readingRepository, oldReading, updatedReading));
             _loggingService.Log(
                 string.Format(
                     "Updated water quality reading: Id={0}, SourceId={1}, SampledAt={2:yyyy-MM-dd}, PHLevel={3}, TurbidityNTU={4}, ChlorineLevel={5}, State={6}.",
@@ -552,6 +568,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             SaveCurrentData();
             WaterQualityReadings = _readingRepository.GetAll();
             ReadingSearchText = string.Empty;
+
+            RefreshTables();
 
             System.Windows.Data.CollectionViewSource.GetDefaultView(WaterQualityReadings).Refresh();
 
@@ -582,8 +600,8 @@ namespace WaterQuality.InformationSystem.ViewModels
                 return;
             }
 
-            WaterQualityReading deletedReading = SelectedWaterQualityReading;
-            _readingRepository.Delete(SelectedWaterQualityReading.Id);
+            WaterQualityReading deletedReading = CloneHelper.CloneWaterQualityReading(SelectedWaterQualityReading);
+            _undoRedoService.ExecuteCommand(new DeleteWaterQualityReadingCommand(_readingRepository, deletedReading));
             _loggingService.Log(
                 string.Format(
                     "Deleted water quality reading: Id={0}, SourceId={1}, SampledAt={2:yyyy-MM-dd}, PHLevel={3}, TurbidityNTU={4}, ChlorineLevel={5}, State={6}.",
@@ -861,6 +879,8 @@ namespace WaterQuality.InformationSystem.ViewModels
             _sourceRepository.ReplaceAll(loadedData.WaterSources);
             _readingRepository.ReplaceAll(loadedData.WaterQualityReadings);
 
+            _undoRedoService.Clear();
+
             WaterSources = _sourceRepository.GetAll();
             WaterQualityReadings = _readingRepository.GetAll();
 
@@ -879,9 +899,66 @@ namespace WaterQuality.InformationSystem.ViewModels
                 MessageBoxImage.Information);
         }
 
-        private void CollectionViewSourceRefresh()
+        private void Undo(object parameter)
         {
-            System.Windows.Data.CollectionViewSource.GetDefaultView(WaterSources).Refresh();
+            IUndoableCommand command = _undoRedoService.Undo();
+
+            if (command == null)
+            {
+                MessageBox.Show(
+                    "There are no actions to undo.",
+                    "Undo",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                return;
+            }
+
+            WaterSources = _sourceRepository.GetAll();
+            WaterQualityReadings = _readingRepository.GetAll();
+
+            SourceSearchText = string.Empty;
+            ReadingSearchText = string.Empty;
+
+            RefreshTables();
+
+            ClearWaterSourceForm(null);
+            ClearWaterQualityReadingForm(null);
+
+            SaveCurrentData();
+
+            _loggingService.Log("Undo executed: " + command.Description + ".");
+        }
+
+        private void Redo(object parameter)
+        {
+            IUndoableCommand command = _undoRedoService.Redo();
+
+            if (command == null)
+            {
+                MessageBox.Show(
+                    "There are no actions to redo.",
+                    "Redo",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                return;
+            }
+
+            WaterSources = _sourceRepository.GetAll();
+            WaterQualityReadings = _readingRepository.GetAll();
+
+            SourceSearchText = string.Empty;
+            ReadingSearchText = string.Empty;
+
+            RefreshTables();
+
+            ClearWaterSourceForm(null);
+            ClearWaterQualityReadingForm(null);
+
+            SaveCurrentData();
+
+            _loggingService.Log("Redo executed: " + command.Description + ".");
         }
 
         private bool TryParseDoubleInput(string input, out double value)
@@ -910,6 +987,19 @@ namespace WaterQuality.InformationSystem.ViewModels
                 normalizedInput,
                 NumberStyles.Float,
                 CultureInfo.InvariantCulture);
+        }
+
+        private void RefreshTables()
+        {
+            if (WaterSources != null)
+            {
+                CollectionViewSource.GetDefaultView(WaterSources).Refresh();
+            }
+
+            if (WaterQualityReadings != null)
+            {
+                CollectionViewSource.GetDefaultView(WaterQualityReadings).Refresh();
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

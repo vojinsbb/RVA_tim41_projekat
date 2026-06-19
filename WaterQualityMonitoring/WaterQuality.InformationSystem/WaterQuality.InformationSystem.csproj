@@ -119,7 +119,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Commands\AddWaterQualityReadingCommand.cs" />
+    <Compile Include="Commands\AddWaterSourceCommand.cs" />
+    <Compile Include="Commands\DeleteWaterQualityReadingCommand.cs" />
+    <Compile Include="Commands\DeleteWaterSourceCommand.cs" />
+    <Compile Include="Commands\IUndoableCommand.cs" />
+    <Compile Include="Commands\UpdateWaterQualityReadingCommand.cs" />
+    <Compile Include="Commands\UpdateWaterSourceCommand.cs" />
     <Compile Include="Data\WaterQualityDataStore.cs" />
+    <Compile Include="Helpers\CloneHelper.cs" />
     <Compile Include="Repositories\IWaterQualityReadingRepository.cs" />
     <Compile Include="Repositories\IWaterSourceRepository.cs" />
     <Compile Include="Repositories\WaterQualityReadingRepository.cs" />
@@ -129,6 +137,7 @@
     <Compile Include="Services\ILoggingService.cs" />
     <Compile Include="Services\JsonDataPersistenceService.cs" />
     <Compile Include="Services\SeedDataService.cs" />
+    <Compile Include="Services\UndoRedoService.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -164,7 +173,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Helpers\.gitkeep" />
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

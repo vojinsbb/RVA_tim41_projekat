@@ -24,22 +24,38 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
-                       Text="Water Source Management"
-                       FontSize="22"
-                       FontWeight="Bold"
-                       VerticalAlignment="Center"/>
+                    Text="Water Source Management"
+                    FontSize="22"
+                    FontWeight="Bold"
+                    VerticalAlignment="Center"/>
 
                 <Button Grid.Column="1"
+                    Content="Undo"
+                    Width="100"
+                    Height="30"
+                    Margin="0,0,10,0"
+                    Command="{Binding UndoCommand}"/>
+
+                <Button Grid.Column="2"
+                    Content="Redo"
+                    Width="100"
+                    Height="30"
+                    Margin="0,0,10,0"
+                    Command="{Binding RedoCommand}"/>
+
+                <Button Grid.Column="3"
                     Content="Save Data"
                     Width="100"
                     Height="30"
                     Margin="0,0,10,0"
                     Command="{Binding SaveDataCommand}"/>
 
-                <Button Grid.Column="2"
+                <Button Grid.Column="4"
                     Content="Load Data"
                     Width="100"
                     Height="30"
@@ -47,10 +63,10 @@
             </Grid>
 
             <Border Grid.Row="1"
-                    BorderBrush="Gray"
-                    BorderThickness="1"
-                    Padding="10"
-                    Margin="0,0,0,15">
+                BorderBrush="Gray"
+                BorderThickness="1"
+                Padding="10"
+                Margin="0,0,0,15">
 
                 <Grid>
                     <Grid.ColumnDefinitions>
