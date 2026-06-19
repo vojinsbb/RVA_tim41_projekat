@@ -88,6 +88,7 @@
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Text.Encodings.Web, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Text.Encodings.Web.8.0.0\lib\net462\System.Text.Encodings.Web.dll</HintPath>
@@ -128,6 +129,7 @@
     <Compile Include="Commands\UpdateWaterSourceCommand.cs" />
     <Compile Include="Data\WaterQualityDataStore.cs" />
     <Compile Include="Helpers\CloneHelper.cs" />
+    <Compile Include="Helpers\DtoMapper.cs" />
     <Compile Include="Repositories\IWaterQualityReadingRepository.cs" />
     <Compile Include="Repositories\IWaterSourceRepository.cs" />
     <Compile Include="Repositories\WaterQualityReadingRepository.cs" />
@@ -138,6 +140,8 @@
     <Compile Include="Services\JsonDataPersistenceService.cs" />
     <Compile Include="Services\SeedDataService.cs" />
     <Compile Include="Services\UndoRedoService.cs" />
+    <Compile Include="Services\WaterQualityDataService.cs" />
+    <Compile Include="Services\WcfHostService.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
