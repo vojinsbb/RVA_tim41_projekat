@@ -12,13 +12,15 @@ namespace WaterQuality.StatisticsApp.Services
 
         public WaterQualityWcfClient()
         {
-            var binding = new BasicHttpBinding();
-            var address = new EndpointAddress("http://localhost:8080/WaterQualityDataService");
+            var binding = new NetNamedPipeBinding();
+
+            var address = new EndpointAddress(
+                "net.pipe://localhost/WaterQualityMonitoring/WaterQualityDataService");
 
             var factory = new ChannelFactory<IWaterQualityDataService>(binding, address);
+
             service = factory.CreateChannel();
         }
-
         public List<WaterSourceDto> GetAllSources()
         {
             return service.GetAllSources();

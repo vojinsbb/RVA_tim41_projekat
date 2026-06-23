@@ -9,6 +9,8 @@ using WaterQuality.Contracts.DTOs;
 using WaterQuality.StatisticsApp.Commands;
 using WaterQuality.StatisticsApp.Services;
 using WaterQuality.StatisticsApp.Strategies;
+using Microsoft.Win32;
+using WaterQuality.StatisticsApp.Helpers;
 
 namespace WaterQuality.StatisticsApp.ViewModels
 {
@@ -32,6 +34,7 @@ namespace WaterQuality.StatisticsApp.ViewModels
         private string statisticsResult;
 
         public ObservableCollection<IStatisticsStrategy> Strategies { get; set; }
+        public ICommand ExportCsvCommand { get; set; }
 
         public WaterSourceDto SelectedSource
         {
@@ -109,6 +112,7 @@ namespace WaterQuality.StatisticsApp.ViewModels
 
             CalculateStatisticsCommand = new RelayCommand(CalculateStatistics);
 
+            ExportCsvCommand = new RelayCommand(ExportCsv);
         }
 
         private void LoadSources()
@@ -188,6 +192,35 @@ namespace WaterQuality.StatisticsApp.ViewModels
 
             StatisticsResult = SelectedStrategy.Calculate(Readings.ToList());
             StatusMessage = "Statistička obrada je završena.";
+        }
+
+        private void ExportCsv()
+        {
+            if (Readings == null || Readings.Count == 0)
+            {
+                MessageBox.Show("Prvo učitajte merenja.");
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "CSV files (*.csv)|*.csv",
+                FileName = "statistics_results.csv"
+            };
+
+            bool? result = saveFileDialog.ShowDialog();
+
+            if (result != true)
+            {
+                return;
+            }
+
+            CsvExporter.ExportReadings(
+                saveFileDialog.FileName,
+                Readings.ToList(),
+                StatisticsResult);
+
+            StatusMessage = "CSV fajl je uspešno sačuvan.";
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -85,6 +85,12 @@
                         Height="30"
                         Margin="0,0,15,0"
                         Command="{Binding CalculateStatisticsCommand}" />
+                
+                <Button Content="Export CSV"
+                        Width="120"
+                        Height="30"
+                        Margin="0,0,15,0"
+                        Command="{Binding ExportCsvCommand}" />
 
                 <TextBlock Text="{Binding StatisticsResult}"
                            VerticalAlignment="Center"
