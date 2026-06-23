@@ -57,6 +57,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Services\WaterQualityWcfClient.cs" />
+    <Compile Include="Strategies\IStatisticsStrategy.cs" />
+    <Compile Include="Strategies\MaxTurbidityStrategy.cs" />
+    <Compile Include="Strategies\MedianPHStrategy.cs" />
+    <Compile Include="Strategies\UnsafeContaminatedCountStrategy.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

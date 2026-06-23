@@ -15,11 +15,13 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Statistička obrada podataka o kvalitetu vode"
+        <TextBlock Grid.Row="0"
+                   Text="Statistička obrada podataka o kvalitetu vode"
                    FontSize="22"
                    FontWeight="Bold"
                    Margin="0,0,0,15"/>
@@ -29,7 +31,6 @@
                 Padding="10"
                 Margin="0,0,0,15">
             <StackPanel Orientation="Horizontal">
-
                 <Button Content="Učitaj izvore"
                         Width="120"
                         Height="30"
@@ -63,42 +64,50 @@
             </StackPanel>
         </Border>
 
-        <DataGrid Grid.Row="2"
+        <Border Grid.Row="2"
+                BorderThickness="1"
+                Padding="10"
+                Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Statistička metoda:"
+                           VerticalAlignment="Center"
+                           Margin="0,0,5,0"/>
+
+                <ComboBox Width="260"
+                          Height="30"
+                          Margin="0,0,15,0"
+                          ItemsSource="{Binding Strategies}"
+                          SelectedItem="{Binding SelectedStrategy}"
+                          DisplayMemberPath="Name"/>
+
+                <Button Content="Izračunaj"
+                        Width="120"
+                        Height="30"
+                        Margin="0,0,15,0"
+                        Command="{Binding CalculateStatisticsCommand}" />
+
+                <TextBlock Text="{Binding StatisticsResult}"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"/>
+            </StackPanel>
+        </Border>
+
+        <DataGrid Grid.Row="3"
                   ItemsSource="{Binding Readings}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Id"
-                                    Binding="{Binding Id}"
-                                    Width="*"/>
-
-                <DataGridTextColumn Header="SourceId"
-                                    Binding="{Binding SourceId}"
-                                    Width="*"/>
-
-                <DataGridTextColumn Header="Datum uzorka"
-                                    Binding="{Binding SampledAt}"
-                                    Width="*"/>
-
-                <DataGridTextColumn Header="pH"
-                                    Binding="{Binding PHLevel}"
-                                    Width="80"/>
-
-                <DataGridTextColumn Header="Mutnoća NTU"
-                                    Binding="{Binding TurbidityNTU}"
-                                    Width="120"/>
-
-                <DataGridTextColumn Header="Hlor"
-                                    Binding="{Binding ChlorineLevel}"
-                                    Width="100"/>
-
-                <DataGridTextColumn Header="Stanje"
-                                    Binding="{Binding State}"
-                                    Width="120"/>
+                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="*"/>
+                <DataGridTextColumn Header="SourceId" Binding="{Binding SourceId}" Width="*"/>
+                <DataGridTextColumn Header="Datum uzorka" Binding="{Binding SampledAt}" Width="*"/>
+                <DataGridTextColumn Header="pH" Binding="{Binding PHLevel}" Width="80"/>
+                <DataGridTextColumn Header="Mutnoća NTU" Binding="{Binding TurbidityNTU}" Width="120"/>
+                <DataGridTextColumn Header="Hlor" Binding="{Binding ChlorineLevel}" Width="100"/>
+                <DataGridTextColumn Header="Stanje" Binding="{Binding State}" Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <TextBlock Grid.Row="3"
+        <TextBlock Grid.Row="4"
                    Text="{Binding StatusMessage}"
                    Margin="0,10,0,0"
                    FontWeight="SemiBold"/>

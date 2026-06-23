@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using WaterQuality.Contracts.DTOs;
 using WaterQuality.StatisticsApp.Commands;
 using WaterQuality.StatisticsApp.Services;
+using WaterQuality.StatisticsApp.Strategies;
 
 namespace WaterQuality.StatisticsApp.ViewModels
 {
@@ -25,6 +27,11 @@ namespace WaterQuality.StatisticsApp.ViewModels
 
         public ICommand LoadSourcesCommand { get; set; }
         public ICommand LoadReadingsCommand { get; set; }
+
+        private IStatisticsStrategy selectedStrategy;
+        private string statisticsResult;
+
+        public ObservableCollection<IStatisticsStrategy> Strategies { get; set; }
 
         public WaterSourceDto SelectedSource
         {
@@ -56,6 +63,28 @@ namespace WaterQuality.StatisticsApp.ViewModels
             }
         }
 
+        public IStatisticsStrategy SelectedStrategy
+        {
+            get { return selectedStrategy; }
+            set
+            {
+                selectedStrategy = value;
+                OnPropertyChanged(nameof(SelectedStrategy));
+            }
+        }
+
+        public string StatisticsResult
+        {
+            get { return statisticsResult; }
+            set
+            {
+                statisticsResult = value;
+                OnPropertyChanged(nameof(StatisticsResult));
+            }
+        }
+
+        public ICommand CalculateStatisticsCommand { get; set; }
+
         public MainViewModel()
         {
             wcfClient = new WaterQualityWcfClient();
@@ -68,6 +97,18 @@ namespace WaterQuality.StatisticsApp.ViewModels
 
             LoadSourcesCommand = new RelayCommand(LoadSources);
             LoadReadingsCommand = new RelayCommand(LoadReadings);
+
+            Strategies = new ObservableCollection<IStatisticsStrategy>
+            {
+                new MedianPHStrategy(),
+                new MaxTurbidityStrategy(),
+                new UnsafeContaminatedCountStrategy()
+            };
+
+            SelectedStrategy = Strategies[0];
+
+            CalculateStatisticsCommand = new RelayCommand(CalculateStatistics);
+
         }
 
         private void LoadSources()
@@ -131,11 +172,30 @@ namespace WaterQuality.StatisticsApp.ViewModels
             }
         }
 
+        private void CalculateStatistics()
+        {
+            if (SelectedStrategy == null)
+            {
+                MessageBox.Show("Izaberite statističku metodu.");
+                return;
+            }
+
+            if (Readings == null || Readings.Count == 0)
+            {
+                MessageBox.Show("Prvo učitajte merenja.");
+                return;
+            }
+
+            StatisticsResult = SelectedStrategy.Calculate(Readings.ToList());
+            StatusMessage = "Statistička obrada je završena.";
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+            
     }
 }
