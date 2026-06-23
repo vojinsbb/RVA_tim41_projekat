@@ -35,6 +35,7 @@ namespace WaterQuality.StatisticsApp.ViewModels
 
         public ObservableCollection<IStatisticsStrategy> Strategies { get; set; }
         public ICommand ExportCsvCommand { get; set; }
+        public ObservableCollection<string> DictionaryDisplay { get; set; }
 
         public WaterSourceDto SelectedSource
         {
@@ -113,6 +114,8 @@ namespace WaterQuality.StatisticsApp.ViewModels
             CalculateStatisticsCommand = new RelayCommand(CalculateStatistics);
 
             ExportCsvCommand = new RelayCommand(ExportCsv);
+
+            DictionaryDisplay = new ObservableCollection<string>();
         }
 
         private void LoadSources()
@@ -165,6 +168,19 @@ namespace WaterQuality.StatisticsApp.ViewModels
                 else
                 {
                     ReadingsBySourceAndYear.Add(key, readings);
+                }
+
+                DictionaryDisplay.Clear();
+
+                foreach (var item in ReadingsBySourceAndYear)
+                {
+                    var first = item.Value.FirstOrDefault();
+
+                    if (first != null)
+                    {
+                        DictionaryDisplay.Add(
+                            $"{item.Key} -> [pH:{first.PHLevel}, Turbidity:{first.TurbidityNTU}, Chlorine:{first.ChlorineLevel}, State:{first.State}]");
+                    }
                 }
 
                 StatusMessage = "Merenja su uspešno učitana.";
